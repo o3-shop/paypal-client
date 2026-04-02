@@ -16,7 +16,7 @@ class GiropayRequest implements JsonSerializable
     use BaseModel;
 
     /**
-     * The full name representation like Mr J Smith
+     * The full name representation like Mr J Smith.
      *
      * @var string
      * minLength: 3
@@ -38,14 +38,15 @@ class GiropayRequest implements JsonSerializable
     public $country_code;
 
     /**
-     * The business identification code (BIC). In payments systems, a BIC is used to identify a specific business,
-     * most commonly a bank
+     * Customizes the payer experience during the approval process for the payment with
+     * PayPal.<blockquote><strong>Note:</strong> Partners and Marketplaces might configure <code>brand_name</code>
+     * and <code>shipping_preference</code> during partner account setup, which overrides the request
+     * values.</blockquote>
      *
-     * @var string | null
-     * minLength: 8
-     * maxLength: 11
+     * @var \OxidSolutionCatalysts\PayPalApi\Model\Orders\OrderExperienceContext
      */
-    public $bic;
+    public $experience_context;
+
 
     public function validate($from = null)
     {
@@ -72,16 +73,6 @@ class GiropayRequest implements JsonSerializable
             2,
             "country_code in GiropayRequest must have maxlength of 2 $within"
         );
-        !isset($this->bic) || Assert::minLength(
-            $this->bic,
-            8,
-            "bic in GiropayRequest must have minlength of 8 $within"
-        );
-        !isset($this->bic) || Assert::maxLength(
-            $this->bic,
-            11,
-            "bic in GiropayRequest must have maxlength of 11 $within"
-        );
     }
 
     private function map(array $data)
@@ -91,9 +82,6 @@ class GiropayRequest implements JsonSerializable
         }
         if (isset($data['country_code'])) {
             $this->country_code = $data['country_code'];
-        }
-        if (isset($data['bic'])) {
-            $this->bic = $data['bic'];
         }
     }
 

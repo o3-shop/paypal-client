@@ -26,6 +26,7 @@ class OrderAuthorizeRequest implements JsonSerializable
      * The API caller-provided external ID for the purchase unit. Required for multiple purchase units.
      *
      * @var string | null
+     * minLength: 1
      * maxLength: 256
      */
     public $reference_id;
@@ -37,6 +38,7 @@ class OrderAuthorizeRequest implements JsonSerializable
      */
     public $amount;
 
+
     public function validate($from = null)
     {
         $within = isset($from) ? "within $from" : "";
@@ -46,6 +48,11 @@ class OrderAuthorizeRequest implements JsonSerializable
             "payment_source in OrderAuthorizeRequest must be instance of PaymentSource $within"
         );
         !isset($this->payment_source) ||  $this->payment_source->validate(OrderAuthorizeRequest::class);
+        !isset($this->reference_id) || Assert::minLength(
+            $this->reference_id,
+            1,
+            "reference_id in OrderAuthorizeRequest must have minlength of 1 $within"
+        );
         !isset($this->reference_id) || Assert::maxLength(
             $this->reference_id,
             256,
@@ -57,6 +64,12 @@ class OrderAuthorizeRequest implements JsonSerializable
             "amount in OrderAuthorizeRequest must be instance of Money $within"
         );
         !isset($this->amount) ||  $this->amount->validate(OrderAuthorizeRequest::class);
+        !isset($this->payment_source->experience_context) || Assert::isInstanceOf(
+            $this->payment_source->experience_context,
+            OrderExperienceContext2::class,
+            "experience_context in OrderAuthorizeRequest must be instance of OrderApplicationContext2 $within"
+        );
+        !isset($this->payment_source->experience_context) ||  $this->payment_source->experience_context->validate(OrderAuthorizeRequest::class);
     }
 
     private function map(array $data)
@@ -69,6 +82,9 @@ class OrderAuthorizeRequest implements JsonSerializable
         }
         if (isset($data['amount'])) {
             $this->amount = new Money($data['amount']);
+        }
+        if (isset($data['experience_context'])) {
+            $this->payment_source->experience_context = new OrderExperienceContext2($data['experience_context']);
         }
     }
 
@@ -87,5 +103,10 @@ class OrderAuthorizeRequest implements JsonSerializable
     public function initAmount(): Money
     {
         return $this->amount = new Money();
+    }
+
+    public function initExperienceContext(): OrderExperienceContext2
+    {
+        return $this->payment_source->experience_context = new OrderExperienceContext2();
     }
 }

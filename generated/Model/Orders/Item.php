@@ -15,13 +15,13 @@ class Item implements JsonSerializable
 {
     use BaseModel;
 
-    /** Goods that are stored, delivered, and used in their electronic format. This value is not currently supported for API callers that leverage the [PayPal for Commerce Platform](https://www.paypal.com/us/webapps/mpp/commerce-platform) product. */
+    /** Goods that are stored, delivered, and used in their electronic format. This value is not currently supported for API callers that leverage the <a href="https://www.paypal.com/us/webapps/mpp/commerce-platform">PayPal for Commerce Platform</a> product. */
     public const CATEGORY_DIGITAL_GOODS = 'DIGITAL_GOODS';
 
     /** A tangible item that can be shipped with proof of delivery. */
     public const CATEGORY_PHYSICAL_GOODS = 'PHYSICAL_GOODS';
 
-    /** A contribution or gift for which no good or service is exchanged, usually to a not for profit organization. This category is restricted to approved API Callers and Payee. Please speak to your account manager if you want to process this type of items. */
+    /** A contribution or gift for which no good or service is exchanged, usually to a not for profit organization. */
     public const CATEGORY_DONATION = 'DONATION';
 
     /**
@@ -54,6 +54,14 @@ class Item implements JsonSerializable
      * maxLength: 10
      */
     public $quantity;
+
+    /**
+     * The item tax rate. Must be a whole number.
+     *
+     * @var string
+     * maxLength: 10
+     */
+    public $tax_rate;
 
     /**
      * The detailed item description.
@@ -117,6 +125,11 @@ class Item implements JsonSerializable
             10,
             "quantity in Item must have maxlength of 10 $within"
         );
+        Assert::maxLength(
+            $this->tax_rate,
+            10,
+            "tax_rate in Item must have maxlength of 10 $within"
+        );
         !isset($this->description) || Assert::maxLength(
             $this->description,
             127,
@@ -152,6 +165,9 @@ class Item implements JsonSerializable
         }
         if (isset($data['quantity'])) {
             $this->quantity = $data['quantity'];
+        }
+        if (isset($data['tax_rate'])) {
+            $this->tax_rate = $data['tax_rate'];
         }
         if (isset($data['description'])) {
             $this->description = $data['description'];

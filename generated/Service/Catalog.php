@@ -9,7 +9,7 @@ use OxidSolutionCatalysts\PayPalApi\Model\Catalog\ProductRequestPOST;
 
 class Catalog extends BaseService
 {
-    protected $basePath = '/v1/catalogs';
+    protected string $basePath = '/v1/catalogs';
 
     /**
      * Creates a product.
@@ -33,10 +33,10 @@ class Catalog extends BaseService
         $headers['Content-Type'] = 'application/json';
         $headers['Prefer'] = $prefer;
 
+
         $body = json_encode($productRequest, true);
         $response = $this->send('POST', $path, [], $headers, $body);
         $jsonData = json_decode($response->getBody(), true);
-
         return new Product($jsonData);
     }
 
@@ -81,6 +81,8 @@ class Catalog extends BaseService
     public function showProductDetails($productId): Product
     {
         $path = "/products/{$productId}";
+
+
 
         $body = null;
         $response = $this->send('GET', $path, [], [], $body);

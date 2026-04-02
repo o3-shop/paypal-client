@@ -22,6 +22,7 @@ class OrderCaptureRequest implements JsonSerializable
      */
     public $payment_source;
 
+
     public function validate($from = null)
     {
         $within = isset($from) ? "within $from" : "";
@@ -31,12 +32,21 @@ class OrderCaptureRequest implements JsonSerializable
             "payment_source in OrderCaptureRequest must be instance of PaymentSource $within"
         );
         !isset($this->payment_source) ||  $this->payment_source->validate(OrderCaptureRequest::class);
+        !isset($this->payment_source->experience_context) || Assert::isInstanceOf(
+            $this->payment_source->experience_context,
+            OrderExperienceContext2::class,
+            "application_context in OrderCaptureRequest must be instance of OrderApplicationContext2 $within"
+        );
+        !isset($this->payment_source->experience_context) ||  $this->payment_source->experience_context->validate(OrderCaptureRequest::class);
     }
 
     private function map(array $data)
     {
         if (isset($data['payment_source'])) {
             $this->payment_source = new PaymentSource($data['payment_source']);
+        }
+        if (isset($data['experience_context'])) {
+            $this->payment_source->experience_context = new OrderExperienceContext2($data['experience_context']);
         }
     }
 
@@ -50,5 +60,10 @@ class OrderCaptureRequest implements JsonSerializable
     public function initPaymentSource(): PaymentSource
     {
         return $this->payment_source = new PaymentSource();
+    }
+
+    public function initApplicationContext(): OrderExperienceContext2
+    {
+        return $this->payment_source->experience_context = new OrderExperienceContext2();
     }
 }

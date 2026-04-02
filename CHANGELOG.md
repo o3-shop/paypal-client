@@ -1,0 +1,91 @@
+# Change Log for PayPal Checkout for OXID
+
+All notable changes to this project will be documented in this file.
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [3.0.17] - 2025-06-24
+
+- Refund request: Remove note_to_payer if it's null or empty
+- Fix type exceptions in Request-Call
+
+## [3.0.16] - 2025-06-10
+
+- set PayPal-Auth-Assertion as deprecated
+
+## [3.0.15] - 2025-02-18
+
+- use Logger via LoggerInterface instead from PayPal-Module
+- add request and connect timeout
+
+## [3.0.14] - 2025-02-04
+
+- use Logger via LoggerInterface instead from PayPal-Module
+
+## [3.0.13] - 2024-12-19
+
+### FIX
+
+- Take over all Features from OXID6.3 Branch
+
+## [3.0.12] - 2024-12-12
+
+### FIX
+
+- introduce ActionHash to make the PayPal-Request-ID more unique
+- add possibility to ignore cached tokens. It helps e.g. for webhook registration
+- BIC field removed from iDeal Payment method
+
+## [3.0.11] -2024-05-14
+
+- introduce central log functionality
+
+## [3.0.10] -2024-04-16
+
+- PayPal-Request-Id based on serialized body, no extra PayPal-Request-Id necessary anymore
+
+## [3.0.9] - 2023-12-07
+
+- split Version for OXID7
+
+## [2.0.9] -2023-11-17
+
+- add PartnerAttributionId to API-Calls
+
+## [2.0.8] -2023-09-08
+
+- Avoid PHP warning on non existing cache file
+
+## [2.0.7] - 2023-01-02
+
+- split Version to be compatible PHP >= 7.1
+- cache the token 
+
+## [1.0.6] - 2022-06-01
+
+- Adapt PUI response mapping
+
+## [1.0.5] - 2022-06-01
+
+- add getter for PUI Bankdata
+
+## [1.0.4] - 2022-05-24
+
+- now backwardcompatible with PHP7.1
+
+## [1.0.3] - 2022-04-05
+
+- remove wrong PayPal Partner Attr Id
+
+## [1.0.2] - 2022-04-05
+
+- get MerchantInformations during onBoarding
+
+## [1.0.1] - 2022-03-22
+
+- add tax-rate in Order items
+
+## [1.0.0] - 2022-03-10
+
+### Changed
+- initial release

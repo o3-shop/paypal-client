@@ -4,6 +4,7 @@ namespace OxidSolutionCatalysts\PayPalApi\Model\Subscriptions;
 
 use JsonSerializable;
 use OxidSolutionCatalysts\PayPalApi\Model\BaseModel;
+use OxidSolutionCatalysts\PayPalApi\Model\Orders\OrderExperienceContext;
 use Webmozart\Assert\Assert;
 
 /**
@@ -36,17 +37,6 @@ class SubscriptionReviseRequest implements JsonSerializable
     public $quantity;
 
     /**
-     * The date and time, in [Internet date and time format](https://tools.ietf.org/html/rfc3339#section-5.6).
-     * Seconds are required while fractional seconds are optional.<blockquote><strong>Note:</strong> The regular
-     * expression provides guidance but does not reject all invalid dates.</blockquote>
-     *
-     * @var string | null
-     * minLength: 20
-     * maxLength: 64
-     */
-    public $effective_time;
-
-    /**
      * The currency and amount for a financial transaction, such as a balance or payment due.
      *
      * @var Money | null
@@ -61,19 +51,14 @@ class SubscriptionReviseRequest implements JsonSerializable
     public $shipping_address;
 
     /**
-     * The application context, which customizes the payer experience during the subscription approval process with
-     * PayPal.
-     *
-     * @var ApplicationContext2 | null
-     */
-    public $application_context;
-
-    /**
-     * The plan details to override at subscription level.
+     * An inline plan object to customise the subscription. You can override plan level default attributes by
+     * providing customised values for the subscription in this object.
      *
      * @var PlanOverride | null
      */
     public $plan;
+
+    public $experience_context;
 
     public function validate($from = null)
     {
@@ -98,16 +83,6 @@ class SubscriptionReviseRequest implements JsonSerializable
             32,
             "quantity in SubscriptionReviseRequest must have maxlength of 32 $within"
         );
-        !isset($this->effective_time) || Assert::minLength(
-            $this->effective_time,
-            20,
-            "effective_time in SubscriptionReviseRequest must have minlength of 20 $within"
-        );
-        !isset($this->effective_time) || Assert::maxLength(
-            $this->effective_time,
-            64,
-            "effective_time in SubscriptionReviseRequest must have maxlength of 64 $within"
-        );
         !isset($this->shipping_amount) || Assert::isInstanceOf(
             $this->shipping_amount,
             Money::class,
@@ -120,12 +95,12 @@ class SubscriptionReviseRequest implements JsonSerializable
             "shipping_address in SubscriptionReviseRequest must be instance of ShippingDetail $within"
         );
         !isset($this->shipping_address) ||  $this->shipping_address->validate(SubscriptionReviseRequest::class);
-        !isset($this->application_context) || Assert::isInstanceOf(
-            $this->application_context,
-            ApplicationContext2::class,
-            "application_context in SubscriptionReviseRequest must be instance of ApplicationContext2 $within"
+        !isset($this->experience_context) || Assert::isInstanceOf(
+            $this->experience_context,
+            OrderExperienceContext::class,
+            "experience_context in SubscriptionReviseRequest must be instance of OrderExperienceContext $within"
         );
-        !isset($this->application_context) ||  $this->application_context->validate(SubscriptionReviseRequest::class);
+        !isset($this->experience_context) ||  $this->experience_context->validate(SubscriptionReviseRequest::class);
         !isset($this->plan) || Assert::isInstanceOf(
             $this->plan,
             PlanOverride::class,
@@ -142,17 +117,14 @@ class SubscriptionReviseRequest implements JsonSerializable
         if (isset($data['quantity'])) {
             $this->quantity = $data['quantity'];
         }
-        if (isset($data['effective_time'])) {
-            $this->effective_time = $data['effective_time'];
-        }
         if (isset($data['shipping_amount'])) {
             $this->shipping_amount = new Money($data['shipping_amount']);
         }
         if (isset($data['shipping_address'])) {
             $this->shipping_address = new ShippingDetail($data['shipping_address']);
         }
-        if (isset($data['application_context'])) {
-            $this->application_context = new ApplicationContext2($data['application_context']);
+        if (isset($data['experience_context'])) {
+            $this->experience_context = new OrderExperienceContext($data['experience_context']);
         }
         if (isset($data['plan'])) {
             $this->plan = new PlanOverride($data['plan']);
@@ -176,9 +148,9 @@ class SubscriptionReviseRequest implements JsonSerializable
         return $this->shipping_address = new ShippingDetail();
     }
 
-    public function initApplicationContext(): ApplicationContext2
+    public function initOrderExperienceContext(): OrderExperienceContext
     {
-        return $this->application_context = new ApplicationContext2();
+        return $this->experience_context = new OrderExperienceContext();
     }
 
     public function initPlan(): PlanOverride

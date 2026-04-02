@@ -9,6 +9,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\MessageFormatter;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
+use JsonException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -28,10 +29,16 @@ class Client
     public const PRODUCTION_URL         = "https://api.paypal.com";
     public const CONTENT_TYPE_JSON      = 'application/json';
     public const CONTENT_TYPE_X_WWW     = 'application/x-www-form-urlencoded';
-    public const CONTENT_TYPE_MULTIPART = 'application/x-www-form-urlencoded';
-    public const PAYPAL_PARTNER_ATTR_ID = 'Oxid_Cart_6Cart_Plus, Oxid_Cart_ECS_Shortcut, OXID_Cart_ProfessionalECS';
-    public const PAYPAL_PARTNER_ATTR_ID_HEADER = 'PayPal-Partner-Attribution-Id';
 
+    /**
+     * Maximum number of seconds to wait for server response
+     */
+    private const REQUEST_TIMEOUT = 30;
+
+    /**
+     * Maximum number of seconds to wait while trying to connect to server
+     */
+    private const CONNECT_TIMEOUT = 5;
 
     /**
      * @var string
@@ -44,9 +51,9 @@ class Client
     protected $httpClient;
 
     /**
-     * @var array
+     * @var null|string
      */
-    protected $tokenResponse;
+    protected $tokenResponse = null;
 
     /**
      * @var string
@@ -64,6 +71,21 @@ class Client
     private $merchantPayerId;
 
     /**
+     * @var string
+     */
+    private $actionHash;
+
+    /**
+     * @var string
+     */
+    private $tokenCacheFilename;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * Client constructor.
      * @param LoggerInterface $logger
      * @param string $endpoint
@@ -72,21 +94,28 @@ class Client
      * @param string $clientSecret
      * seller/merchant or partner clientSecret depending on if it is a first party or a third party
      * request. Usually you want to use the sellers credentials if they are available
+     * @param string $tokenCacheFilename the filename for the cached token
+     * @param string $actionHash - An hash to help generate a unique PayPal-Request-Id
      * @param string $payerId the technical oxid paypal account client id used as meta information in requests
      * @param bool $debug
      */
     public function __construct(
         LoggerInterface $logger,
-        $endpoint,
-        $clientId,
-        $clientSecret,
-        $payerId = "",
-        $debug = false
+                        $endpoint,
+                        $clientId,
+                        $clientSecret,
+                        $tokenCacheFilename,
+                        $actionHash = "",
+                        $payerId = "",
+                        $debug = false
     ) {
+        $this->logger = $logger;
         $this->endpoint = $endpoint;
         $this->merchantClientId = $clientId;
         $this->merchantClientSecret = $clientSecret;
         $this->merchantPayerId = $payerId;
+        $this->tokenCacheFilename = $tokenCacheFilename;
+        $this->actionHash = $actionHash;
         $stack = HandlerStack::create();
         if ($debug) {
             $stack->push(
@@ -95,8 +124,10 @@ class Client
         }
         $this->httpClient = new \GuzzleHttp\Client(
             [
-                'handler' => $stack,
-                'debug' => $debug
+                'handler'         => $stack,
+                'debug'           => $debug,
+                'timeout'         => self::REQUEST_TIMEOUT,
+                'connect_timeout' => self::CONNECT_TIMEOUT
             ]
         );
     }
@@ -124,7 +155,7 @@ class Client
         try {
             $method = $request->getMethod();
             assert(
-                (array_search($method, ['POST','PATCH','PUT','GET','DELETE']) !== false),
+                (in_array($method, ['POST','PATCH','PUT','GET','DELETE'])),
                 "not valid http method '$method' for paypal client"
             );
 
@@ -134,16 +165,14 @@ class Client
                 //clear tokens to force re-auth
                 $this->setTokenResponse(null);
                 return $this->sendWithAuth($request);
-            } else {
-                throw $e;
             }
+            throw $e;
         }
     }
 
     public function request($method, $uri = '', $options = [])
     {
-        $res = $this->httpClient->request($method, $this->endpoint . $uri, $options);
-        return $res;
+        return $this->httpClient->request($method, $this->endpoint . $uri, $options);
     }
 
     /**
@@ -152,6 +181,8 @@ class Client
      * see Client::setTokenResponse()
      * this call will be done implicitly if a request is sent and the client is not yet authenticated
      * @return $this
+     * @throws GuzzleException
+     * @throws JsonException
      */
     public function auth()
     {
@@ -171,40 +202,56 @@ class Client
             ]
         ]);
 
-        $this->setTokenResponse(json_decode('' . $res->getBody(), true));
+        $rawTokenResponse = json_decode('' . $res->getBody(), true, 512, JSON_THROW_ON_ERROR);
+
+        $this->setTokenResponse($rawTokenResponse['access_token']);
 
         return $this;
     }
 
     public function isAuthenticated()
     {
-        return isset($this->tokenResponse['access_token']);
+        return !is_null($this->getTokenResponse());
     }
 
     /**
      * use this if you want to inject a token into the auth headers set by this client.
      * You may want to use this with the return from getTokenResponse() so you are able to cache the
      * the auth between requests.
-     * @param $tokenResponse
+     * @param null|string $tokenResponse
      */
     public function setTokenResponse($tokenResponse)
     {
+        if ($this->tokenCacheFilename) {
+            file_put_contents($this->tokenCacheFilename, $tokenResponse);
+        }
         $this->tokenResponse = $tokenResponse;
     }
 
     /**
      * use this if you want to store the auth response for later reuse
      * see also setTokenResponse
-     * @return array the token response from the auth call
+     * @return string|null the token response from the auth call
      */
     public function getTokenResponse()
     {
+        if (is_null($this->tokenResponse) &&
+            $this->tokenCacheFilename &&
+            file_exists($this->tokenCacheFilename)
+        ) {
+            $tokenResponse = file_get_contents($this->tokenCacheFilename);
+            if ($tokenResponse) {
+                $this->tokenResponse = $tokenResponse;
+            }
+        }
         return $this->tokenResponse;
     }
 
     /**
      * @param RequestInterface $request
      * @return RequestInterface
+     * @throws GuzzleException
+     * @throws JsonException
      */
     protected function injectAuthHeaders(RequestInterface $request)
     {
@@ -212,19 +259,22 @@ class Client
             $this->auth();
         }
 
-        $headers["Authorization"] = "Bearer " . $this->tokenResponse['access_token'];
+        $headers["Authorization"] = "Bearer " . $this->getTokenResponse();
 
         $joseHeader = base64_encode('{"alg":"none"}');
 
-        $payerId = $this->merchantPayerId;
-        if ($payerId !== "") {
-            $partnerClientId = $this->merchantClientId;
-            $payload = base64_encode("{\"iss\": \"$partnerClientId\", \"payer_id\":\"$payerId\"}");
+        /*
+         * deprecated: PayPal-Auth-Assertion is not needed any more
+         *
+         * $payerId = $this->merchantPayerId;
+         * if ($payerId !== "") {
+         *    $partnerClientId = $this->merchantClientId;
+         *    $payload = base64_encode("{\"iss\": \"$partnerClientId\", \"payer_id\":\"$payerId\"}");
+         *
+         *   $headers['PayPal-Auth-Assertion'] = "{$joseHeader}.{$payload}.";
+         * }
+         */
 
-            $headers['PayPal-Auth-Assertion'] = "{$joseHeader}.{$payload}.";
-        }
-
-        $headers[self::PAYPAL_PARTNER_ATTR_ID_HEADER] = self::PAYPAL_PARTNER_ATTR_ID;
         foreach ($headers as $headerName => $headerValue) {
             $request = $request->withHeader($headerName, $headerValue);
         }
@@ -240,10 +290,16 @@ class Client
     protected function sendWithAuth(RequestInterface $request)
     {
         $request = $this->injectAuthHeaders($request);
-        $res = $this->httpClient->send($request);
-        return $res;
+        return $this->httpClient->send($request);
     }
 
+    /**
+     * provide the Logger for Services that use the Client
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
 
     /**
      * @return string
@@ -267,5 +323,13 @@ class Client
     public function getEndpoint(): string
     {
         return $this->endpoint;
+    }
+
+    /**
+     * @return string
+     */
+    public function getActionHash(): string
+    {
+        return $this->actionHash;
     }
 }
