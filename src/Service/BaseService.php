@@ -14,12 +14,19 @@ class BaseService
 
     protected string $basePath = '';
 
+    protected string $trackingId = '';
+
     /**
      * @param $client Client
      */
     public function __construct(Client $client)
     {
         $this->client = $client;
+    }
+
+    public function setTrackingId(string $trackingId): void
+    {
+        $this->trackingId = $trackingId;
     }
 
     /**
@@ -42,7 +49,9 @@ class BaseService
         }
         $fullPath = $this->basePath . $path;
 
-        $headers['PayPal-Request-Id'] = md5($path . serialize($body) . $this->client->getActionHash());
+        $headers['PayPal-Request-Id'] = $this->trackingId
+            ? $this->trackingId . '_' . md5($path . serialize($body))
+            : md5($path . serialize($body) . $this->client->getActionHash());
 
         $request = $this->client->createRequest($method, $fullPath, $headers, $body);
 
