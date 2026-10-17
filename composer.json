@@ -6,7 +6,7 @@
         "oxid-solution-catalysts/paypal-client": "self.version"
     },
     "require": {
-        "php" : ">=7.1",
+        "php": ">=7.1",
         "guzzlehttp/guzzle": "~7",
         "psr/log": "^1.1",
         "monolog/monolog": "^1.27 || ^2.0",
@@ -19,7 +19,15 @@
     },
     "autoload": {
         "psr-4": {
-            "OxidSolutionCatalysts\\PayPalApi\\": ["src","generated"]
+            "OxidSolutionCatalysts\\PayPalApi\\": [
+                "src",
+                "generated"
+            ]
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-o3-client": "3.0.x-dev"
         }
     }
 }
