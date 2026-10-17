@@ -1,12 +1,15 @@
 {
-    "name": "oxid-solution-catalysts/paypal-client",
-    "description": "OXID eSales PayPal payment API-client for OXID",
+    "name": "o3-shop/paypal-client",
+    "description": "O3-Shop PayPal Checkout API client (fork of oxid-solution-catalysts/paypal-client)",
     "type": "library",
+    "replace": {
+        "oxid-solution-catalysts/paypal-client": "self.version"
+    },
     "require": {
         "php" : ">=7.1",
         "guzzlehttp/guzzle": "~7",
         "psr/log": "^1.1",
-        "monolog/monolog": "^1.27",
+        "monolog/monolog": "^1.27 || ^2.0",
         "league/oauth2-client": "^2.4",
         "webmozart/assert": "^1.7 || ^1.8 || ^1.9"
     },
