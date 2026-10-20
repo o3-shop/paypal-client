@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.21] - 2026-10-20
+
+- Add `email` to `TrustlyRequest` so Trustly orders can be created
+- Add Packagist metadata (homepage, license, authors)
+
 ## [3.0.17] - 2025-06-24
 
 - Refund request: Remove note_to_payer if it's null or empty

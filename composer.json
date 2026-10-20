@@ -2,6 +2,22 @@
     "name": "o3-shop/paypal-client",
     "description": "O3-Shop PayPal Checkout API client (fork of oxid-solution-catalysts/paypal-client)",
     "type": "library",
+    "license": "GPL-3.0-only",
+    "homepage": "https://www.o3-shop.com/",
+    "authors": [
+        {
+            "name": "O3-Shop",
+            "email": "info@o3-shop.com",
+            "homepage": "https://www.o3-shop.com",
+            "role": "Developer"
+        },
+        {
+            "name": "OXID eSales AG",
+            "email": "info@oxid-esales.com",
+            "homepage": "https://oxid-esales.com",
+            "role": "Developer"
+        }
+    ],
     "replace": {
         "oxid-solution-catalysts/paypal-client": "self.version"
     },
