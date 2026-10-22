@@ -37,9 +37,16 @@ class TrustlyRequest implements JsonSerializable
      */
     public $country_code;
 
+    /**
+     * The email address of the account holder associated with this payment method.
+     *
+     * @var string
+     */
+    public $email;
+
     public function validate($from = null)
     {
-        $within = isset($from) ? "within $from" : "";
+        $within = isset($from) ? "within $from" : '';
         Assert::notNull($this->name, "name in TrustlyRequest must not be NULL $within");
         Assert::minLength(
             $this->name,
@@ -71,6 +78,9 @@ class TrustlyRequest implements JsonSerializable
         }
         if (isset($data['country_code'])) {
             $this->country_code = $data['country_code'];
+        }
+        if (isset($data['email'])) {
+            $this->email = $data['email'];
         }
     }
 

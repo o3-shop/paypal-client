@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `email` to `TrustlyRequest` so Trustly orders can be created
 - Add Packagist metadata (homepage, license, authors)
 
+## [3.0.20] - 2026-01-23
+
+- Handle empty API responses in `ApiException` without throwing `JsonException`
+
+## [3.0.19] - 2025-10-07
+
+- Take over changes from OXID 6.3 branch
+- Add `experience_context` to Apple Pay, Bancontact, Blik payment objects and requests
+- Add `payer` property to `Order`
+- Fix `ApplePayRequest` experience context property name
+- Fix `GooglePayRequest` property assignment
+- Add `attributes` property to `GooglePayRequest`
+
+## [3.0.18] - 2025-07-31
+
+- Update for OXID eShop 7.1 / 6.5 compatibility
+- Add `monolog/monolog` `^1.27` requirement
+- Add `experience_context` support in `GooglePayRequest`
+- Add `payer` property to `Order`
+
 ## [3.0.17] - 2025-06-24
 
 - Refund request: Remove note_to_payer if it's null or empty
