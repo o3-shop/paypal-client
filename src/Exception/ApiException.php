@@ -15,9 +15,18 @@ class ApiException extends \Exception
     private $request;
 
     /**
-     * @var ResponseInterface|null
+     * @var \Psr\Http\Message\ResponseInterface|null
      */
     private $response;
+
+    /**
+     * Decoded error body, cached once in the constructor. The response body is a
+     * stream that may not be seekable, so the getters must not try to read it
+     * again after the constructor consumed it.
+     *
+     * @var array|null
+     */
+    private $decodedError;
 
     /**
      * @throws JsonException
@@ -29,6 +38,7 @@ class ApiException extends \Exception
         // Safe extraction of request and response objects
         $this->request = method_exists($e, 'getRequest') ? $e->getRequest() : null;
         $this->response = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+        $this->decodedError = null;
 
         // Build base message
         $message = 'HTTP Request';
@@ -40,8 +50,11 @@ class ApiException extends \Exception
             $phrase = $this->response->getReasonPhrase();
             $message .= " returned: $code $phrase";
             try {
-                // Analyze response body for error details
-                $error = json_decode($this->response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+                // Analyze response body for error details. Decode it once and cache
+                // the result: the body stream may not be seekable, so the getters
+                // cannot re-read it.
+                $error = json_decode((string)$this->response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+                $this->decodedError = is_array($error) ? $error : null;
                 if ($error) {
                     if (isset($error['message'])) {
                         $message .= "\nReturned Message: " . $error['message'];
@@ -91,19 +104,23 @@ class ApiException extends \Exception
     /**
      * Gets error description
      *
+     * Returns an empty string when the response body is not JSON (an HTML error
+     * page, an empty body, a network timeout), so error handling does not throw.
+     *
      * @return string
-     * @throws JsonException
      */
     public function getErrorDescription()
     {
         $description = '';
 
-        if ($this->response && $error = json_decode($this->response->getBody(), true, 512, JSON_THROW_ON_ERROR)) {
-            if (isset($error['details'][0]['description'])) {
-                $description = $error['details'][0]['description'];
-            } elseif (isset($error['message'])) {
-                $description = $error['message'];
-            }
+        if (!$this->decodedError) {
+            return $description;
+        }
+
+        if (isset($this->decodedError['details'][0]['description'])) {
+            $description = $this->decodedError['details'][0]['description'];
+        } elseif (isset($this->decodedError['message'])) {
+            $description = $this->decodedError['message'];
         }
 
         return $description;
@@ -112,18 +129,23 @@ class ApiException extends \Exception
     /**
      * Gets error issue (better for translation ...)
      *
+     * Returns an empty string when the response body is not JSON (an HTML error
+     * page, an empty body, a network timeout), so error handling does not throw.
+     *
      * @return string
-     * @throws JsonException
      */
     public function getErrorIssue()
     {
         $issue = '';
-        if ($this->response) {
-            $error = json_decode($this->response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            if (isset($error['details'][0]['issue'])) {
-                $issue = $error['details'][0]['issue'];
-            }
+
+        if (!$this->decodedError) {
+            return $issue;
         }
+
+        if (isset($this->decodedError['details'][0]['issue'])) {
+            $issue = $this->decodedError['details'][0]['issue'];
+        }
+
         return $issue;
     }
 }

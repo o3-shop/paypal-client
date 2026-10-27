@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Add `email` to `TrustlyRequest` so Trustly orders can be created
 - Add Packagist metadata (homepage, license, authors)
+- Do not throw `JsonException` from `ApiException::getErrorIssue()` / `getErrorDescription()` when an error response is not JSON (HTML error page, empty body, timeout), so error handling keeps working
+- Decode the error body once in `ApiException` and cache it, so the getters keep returning JSON issue/description details even when the response stream is not seekable
 
 ## [3.0.20] - 2026-01-23
 
