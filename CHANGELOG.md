@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.22] - 2026-10-28
+
+- Redact the `Authorization`, `PayPal-Auth-Assertion` and `PayPal-Client-Metadata-Id` headers and omit the request body from the `ApiException` curl line, so access tokens and payer data cannot reach the logs
+- Require PHP `>=7.3`, the version the code already needs for `JSON_THROW_ON_ERROR`
+
 ## [3.0.21] - 2026-10-20
 
 - Add `email` to `TrustlyRequest` so Trustly orders can be created

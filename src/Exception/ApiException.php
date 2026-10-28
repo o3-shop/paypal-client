@@ -80,11 +80,17 @@ class ApiException extends \Exception
         if ($this->request) {
             $message .= "\nThe following curl request could be used to simulate a similar request:
             \ncurl -v -X " . $this->request->getMethod() . ' "' . $this->request->getUri() . '"';
+            $sensitiveHeaders = ['authorization', 'paypal-auth-assertion', 'paypal-client-metadata-id'];
             foreach ($this->request->getHeaders() as $headerName => $headerValue) {
-                $message .= " -H \"$headerName: " . join(",", $headerValue) . '"';
+                $value = in_array(strtolower($headerName), $sensitiveHeaders, true)
+                    ? '***'
+                    : join(',', $headerValue);
+                $message .= " -H \"$headerName: " . $value . '"';
             }
-            if ($this->request->getBody() . "") {
-                $message .= " -d " . $this->request->getBody();
+            if ($this->request->getBody() . '') {
+                // The body can contain payer data; do not copy it into a message that
+                // is logged and (shouldDisplay() === true) may be shown to the user.
+                $message .= ' -d [request body omitted]';
             }
         }
 
