@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.22] - 2026-10-28
+
+- Redact the `Authorization`, `PayPal-Auth-Assertion` and `PayPal-Client-Metadata-Id` headers and omit the request body from the `ApiException` curl line, so access tokens and payer data cannot reach the logs
+- Require PHP `>=7.3`, the version the code already needs for `JSON_THROW_ON_ERROR`
+
+## [3.0.21] - 2026-10-20
+
+- Add `email` to `TrustlyRequest` so Trustly orders can be created
+- Add Packagist metadata (homepage, license, authors)
+- Do not throw `JsonException` from `ApiException::getErrorIssue()` / `getErrorDescription()` when an error response is not JSON (HTML error page, empty body, timeout), so error handling keeps working
+- Decode the error body once in `ApiException` and cache it, so the getters keep returning JSON issue/description details even when the response stream is not seekable
+
+## [3.0.20] - 2026-01-23
+
+- Handle empty API responses in `ApiException` without throwing `JsonException`
+
+## [3.0.19] - 2025-10-07
+
+- Take over changes from OXID 6.3 branch
+- Add `experience_context` to Apple Pay, Bancontact, Blik payment objects and requests
+- Add `payer` property to `Order`
+- Fix `ApplePayRequest` experience context property name
+- Fix `GooglePayRequest` property assignment
+- Add `attributes` property to `GooglePayRequest`
+
+## [3.0.18] - 2025-07-31
+
+- Update for OXID eShop 7.1 / 6.5 compatibility
+- Add `monolog/monolog` `^1.27` requirement
+- Add `experience_context` support in `GooglePayRequest`
+- Add `payer` property to `Order`
+
 ## [3.0.17] - 2025-06-24
 
 - Refund request: Remove note_to_payer if it's null or empty

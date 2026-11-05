@@ -6451,6 +6451,14 @@
             "data_class": "class4",
             "data_category": "ConsumerPersonal"
           }
+        },
+        "email": {
+          "description": "The email address of the account holder associated with this payment method.",
+          "$ref": "#/definitions/MerchantCommonComponentsSpecification-v1-schema-common_components-v3-schema-json-openapi-2.0-email_address.json",
+          "x-securityClassification": {
+            "data_class": "class3",
+            "data_category": "ConsumerPersonal"
+          }
         }
       },
       "required": [

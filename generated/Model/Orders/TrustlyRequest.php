@@ -37,6 +37,13 @@ class TrustlyRequest implements JsonSerializable
      */
     public $country_code;
 
+    /**
+     * The email address of the payer.
+     *
+     * @var string
+     */
+    public $email;
+
     public function validate($from = null)
     {
         $within = isset($from) ? "within $from" : "";
@@ -71,6 +78,9 @@ class TrustlyRequest implements JsonSerializable
         }
         if (isset($data['country_code'])) {
             $this->country_code = $data['country_code'];
+        }
+        if (isset($data['email'])) {
+            $this->email = $data['email'];
         }
     }
 
